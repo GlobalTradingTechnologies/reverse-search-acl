@@ -1,0 +1,31 @@
+{
+    "name": "gtt/reverse-search-acl",
+    "description": "Provides a way for Symfony's ACL infrastructure to find object identities that are accessible (with specified permission like VIEW, EDIT, etc) by specified security identity",
+    "type": "library",
+    "keywords": ["symfony", "acl", "reverse", "search"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "fduch",
+            "email": "alex.medwedew@gmail.com"
+        }
+    ],
+    "require": {
+        "symfony/security-acl": "~2.3",
+        "doctrine/dbal": " ~2.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~4.0"
+    },
+    "autoload": {
+        "psr-4": { "Gtt\\Acl\\": "src" }
+    },
+    "autoload-dev": {
+        "psr-4": { "Gtt\\Acl\\Tests\\": "tests" }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.x-dev"
+        }
+    }
+}
