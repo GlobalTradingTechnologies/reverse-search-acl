@@ -1,6 +1,8 @@
 Symfony ACL reverse search component
 ====================================
 
+[![Build Status](https://travis-ci.org/GlobalTradingTechnologies/reverse-search-acl.svg?branch=master)](https://travis-ci.org/GlobalTradingTechnologies/reverse-search-acl)
+
 This library extends base Symfony's [MutableAclProvider](https://github.com/symfony/security-acl/blob/master/Dbal/MutableAclProvider.php)
 with ability to find accessible object identities for specified security identity. You can also specify permission Ace
 was granted for target security identity with.
