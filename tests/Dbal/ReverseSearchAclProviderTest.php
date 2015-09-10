@@ -149,6 +149,21 @@ class ReverseSearchAclProviderTest extends \PHPUnit_Framework_TestCase
         );
     }
 
+    public function testTheSameOidsForDifferentPermissionsAreNotDuplicated()
+    {
+        $oid = new ObjectIdentity('id', 'type');
+
+        $acl = $this->aclProvider->createAcl($oid);
+        $acl->insertObjectAce($this->sid, MaskBuilder::MASK_EDIT);
+        $acl->insertObjectAce($this->sid, MaskBuilder::MASK_VIEW);
+        $this->aclProvider->updateAcl($acl);
+
+        $this->assertEquals(
+            array($oid->getType() => array($oid)),
+            $this->aclProvider->findObjectIdentities($this->sid, "VIEW")
+        );
+    }
+
     protected function getOptions()
     {
         return array(

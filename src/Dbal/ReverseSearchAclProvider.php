@@ -103,7 +103,7 @@ class ReverseSearchAclProvider extends MutableAclProvider
         $permissionSqlRestriction = $this->getPermissionSqlRestriction($permission, $valuesForBind);
 
         $pattern = <<<SELECTCLAUSE
-            SELECT
+            SELECT DISTINCT
                 o.object_identifier,
                 c.class_type
             FROM
