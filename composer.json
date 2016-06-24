@@ -11,7 +11,7 @@
         }
     ],
     "require": {
-        "symfony/security-acl": "~2.3",
+        "symfony/security-acl": "^2.3|^3.0",
         "doctrine/dbal": " ~2.2"
     },
     "require-dev": {
