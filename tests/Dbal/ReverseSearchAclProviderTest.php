@@ -98,7 +98,7 @@ class ReverseSearchAclProviderTest extends \PHPUnit_Framework_TestCase
             $this->aclProvider->findObjectIdentities($this->sid, "VIEW")
         );
         $this->assertEquals(
-            [$oid->getType() => ['oid_access' => [$oid->getIdentifier()]]],
+            [$oid->getType() => ['object_access' => [$oid->getIdentifier()]]],
             $this->aclProvider->findAllowedEntries($this->sid, "VIEW")
         );
     }
@@ -117,7 +117,7 @@ class ReverseSearchAclProviderTest extends \PHPUnit_Framework_TestCase
             $this->aclProvider->findObjectIdentities($this->sid, "VIEW")
         );
         $this->assertEquals(
-            [$oid->getType() => ['oid_access' => [$oid->getIdentifier()]]],
+            [$oid->getType() => ['object_access' => [$oid->getIdentifier()]]],
             $this->aclProvider->findAllowedEntries($this->sid, "VIEW")
         );
     }
@@ -160,7 +160,7 @@ class ReverseSearchAclProviderTest extends \PHPUnit_Framework_TestCase
             $this->aclProvider->findObjectIdentities($this->sid, "VIEW", ['class' => $oid2->getType()])
         );
         $this->assertEquals(
-            [$oid2->getType() => ['oid_access' => [$oid2->getIdentifier()]]],
+            [$oid2->getType() => ['object_access' => [$oid2->getIdentifier()]]],
             $this->aclProvider->findAllowedEntries($this->sid, "VIEW", ['class' => $oid2->getType()])
         );
     }
@@ -179,7 +179,7 @@ class ReverseSearchAclProviderTest extends \PHPUnit_Framework_TestCase
             $this->aclProvider->findObjectIdentities($this->sid, "VIEW")
         );
         $this->assertEquals(
-            [$oid->getType() => ['oid_access' => [$oid->getIdentifier()]]],
+            [$oid->getType() => ['object_access' => [$oid->getIdentifier()]]],
             $this->aclProvider->findAllowedEntries($this->sid, "VIEW")
         );
     }
@@ -201,7 +201,7 @@ class ReverseSearchAclProviderTest extends \PHPUnit_Framework_TestCase
             [$oid->getType() => [
                     'class_access'       => true,
                     'class_field_access' => ['name'],
-                    'oid_field_access'   => [
+                    'object_field_access'   => [
                         $oid->getIdentifier() => ['surname']
                     ],
                 ]

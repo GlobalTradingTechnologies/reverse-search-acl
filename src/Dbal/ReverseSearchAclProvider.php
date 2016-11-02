@@ -150,10 +150,10 @@ SELECTCLAUSE;
      *
      *               [
      *                  '\F\Q\C\N' => [
-     *                      'class_access'       => true,
-     *                      'class_field_access' => ['field1', 'field2', 'field3'],
-     *                      'oid_access'         => ['id1', 'id2', 'id3', 'id4'],
-     *                      'oid_field_access'   => [
+     *                      'class_access'        => true,
+     *                      'class_field_access'  => ['field1', 'field2', 'field3'],
+     *                      'object_access'       => ['id1', 'id2', 'id3', 'id4'],
+     *                      'object_field_access' => [
      *                          'id2' => ['field1', 'field2'],
      *                          'id5' => ['field3']
      *                      ]
@@ -213,21 +213,21 @@ SELECTCLAUSE;
             if (!empty($data['object_identifier'])) {
                 if (!empty($data['field_name'])) {
                     // object field ace
-                    if (!isset($result[$classType]['oid_field_access'])) {
-                        $result[$classType]['oid_field_access'] = array();
+                    if (!isset($result[$classType]['object_field_access'])) {
+                        $result[$classType]['object_field_access'] = array();
                     }
 
-                    if (!isset($result[$classType]['oid_field_access'][$data['object_identifier']])) {
-                        $result[$classType]['oid_field_access'][$data['object_identifier']] = array();
+                    if (!isset($result[$classType]['object_field_access'][$data['object_identifier']])) {
+                        $result[$classType]['object_field_access'][$data['object_identifier']] = array();
                     }
-                    $result[$classType]['oid_field_access'][$data['object_identifier']][] = $data['field_name'];
+                    $result[$classType]['object_field_access'][$data['object_identifier']][] = $data['field_name'];
                 } else {
-                    if (!isset($result[$classType]['oid_access'])) {
-                        $result[$classType]['oid_access'] = array();
+                    if (!isset($result[$classType]['object_access'])) {
+                        $result[$classType]['object_access'] = array();
                     }
                     // object ace
-                    if (!in_array($data['object_identifier'], $result[$classType]['oid_access'])) {
-                        $result[$classType]['oid_access'][] = $data['object_identifier'];
+                    if (!in_array($data['object_identifier'], $result[$classType]['object_access'])) {
+                        $result[$classType]['object_access'][] = $data['object_identifier'];
                     }
                 }
             } else {
