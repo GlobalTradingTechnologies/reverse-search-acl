@@ -12,8 +12,10 @@
 
 namespace Gtt\Acl\Tests\Dbal;
 
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Gtt\Acl\Dbal\ReverseSearchAclProvider;
+use Gtt\Acl\Tests\Dbal\Fixtures\Person;
 use Symfony\Component\Security\Acl\Dbal\Schema;
 use Symfony\Component\Security\Acl\Domain\ObjectIdentity;
 use Symfony\Component\Security\Acl\Domain\PermissionGrantingStrategy;
@@ -40,7 +42,7 @@ class ReverseSearchAclProviderTest extends \PHPUnit_Framework_TestCase
     protected $sid;
 
     /**
-     * @var \Doctrine\DBAL\Connection
+     * @var Connection
      */
     protected $con;
 
@@ -80,6 +82,7 @@ class ReverseSearchAclProviderTest extends \PHPUnit_Framework_TestCase
         $this->aclProvider->updateAcl($acl);
 
         $this->assertEmpty($this->aclProvider->findObjectIdentities($this->sid, "VIEW"));
+        $this->assertEmpty($this->aclProvider->findAllowedEntries($this->sid, "VIEW"));
     }
 
     public function testPermissionMapSupportWorks()
@@ -91,8 +94,12 @@ class ReverseSearchAclProviderTest extends \PHPUnit_Framework_TestCase
         $this->aclProvider->updateAcl($acl);
 
         $this->assertEquals(
-            array($oid->getType() => array($oid)),
+            [$oid->getType() => array($oid)],
             $this->aclProvider->findObjectIdentities($this->sid, "VIEW")
+        );
+        $this->assertEquals(
+            [$oid->getType() => ['oid_access' => [$oid->getIdentifier()]]],
+            $this->aclProvider->findAllowedEntries($this->sid, "VIEW")
         );
     }
 
@@ -106,8 +113,12 @@ class ReverseSearchAclProviderTest extends \PHPUnit_Framework_TestCase
         $this->aclProvider->updateAcl($acl);
 
         $this->assertEquals(
-            array($oid->getType() => array($oid)),
+            [$oid->getType() => array($oid)],
             $this->aclProvider->findObjectIdentities($this->sid, "VIEW")
+        );
+        $this->assertEquals(
+            [$oid->getType() => ['oid_access' => [$oid->getIdentifier()]]],
+            $this->aclProvider->findAllowedEntries($this->sid, "VIEW")
         );
     }
 
@@ -128,6 +139,7 @@ class ReverseSearchAclProviderTest extends \PHPUnit_Framework_TestCase
         $this->aclProvider->updateAcl($acl);
 
         $this->assertEmpty($this->aclProvider->findObjectIdentities($this->sid, "VIEW"));
+        $this->assertEmpty($this->aclProvider->findAllowedEntries($this->sid, "VIEW"));
     }
 
     public function testClassRestrictionWorks()
@@ -144,8 +156,12 @@ class ReverseSearchAclProviderTest extends \PHPUnit_Framework_TestCase
         $this->aclProvider->updateAcl($acl);
 
         $this->assertEquals(
-            array($oid2->getType() => array($oid2)),
+            [$oid2->getType() => array($oid2)],
             $this->aclProvider->findObjectIdentities($this->sid, "VIEW", array('class' => $oid2->getType()))
+        );
+        $this->assertEquals(
+            [$oid2->getType() => ['oid_access' => [$oid2->getIdentifier()]]],
+            $this->aclProvider->findAllowedEntries($this->sid, "VIEW", array('class' => $oid2->getType()))
         );
     }
 
@@ -159,8 +175,38 @@ class ReverseSearchAclProviderTest extends \PHPUnit_Framework_TestCase
         $this->aclProvider->updateAcl($acl);
 
         $this->assertEquals(
-            array($oid->getType() => array($oid)),
+            [$oid->getType() => array($oid)],
             $this->aclProvider->findObjectIdentities($this->sid, "VIEW")
+        );
+        $this->assertEquals(
+            [$oid->getType() => ['oid_access' => [$oid->getIdentifier()]]],
+            $this->aclProvider->findAllowedEntries($this->sid, "VIEW")
+        );
+    }
+
+    public function testFieldAndClassGrantsWorks()
+    {
+        $oid = new ObjectIdentity('10', Person::class);
+
+        $acl = $this->aclProvider->createAcl($oid);
+
+        $acl->insertClassFieldAce('name', $this->sid, MaskBuilder::MASK_VIEW);
+        $acl->insertClassAce($this->sid, MaskBuilder::MASK_EDIT);
+        $acl->insertObjectFieldAce('surname', $this->sid, MaskBuilder::MASK_VIEW);
+
+
+        $this->aclProvider->updateAcl($acl);
+
+        $this->assertEquals(
+            [$oid->getType() => [
+                    'class_access'       => true,
+                    'class_field_access' => ['name'],
+                    'oid_field_access'   => [
+                        $oid->getIdentifier() => ['surname']
+                    ],
+                ]
+            ],
+            $this->aclProvider->findAllowedEntries($this->sid, "VIEW")
         );
     }
 
