@@ -200,8 +200,6 @@ SELECTCLAUSE;
         if (!empty($aceFilter['field'])) {
             $aceSqlRestriction .= " AND e.field_name = :field";
             $valuesForBind['field'] = array('value' => $aceFilter['field'], 'type' => PDO::PARAM_STR);
-
-            return array($aceSqlRestriction, $valuesForBind);
         }
 
         return $aceSqlRestriction;
