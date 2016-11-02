@@ -43,9 +43,9 @@ class ReverseSearchAclProvider extends MutableAclProvider
      * @var array
      */
     protected static $permissionStrategyCheckPatterns = [
-        PermissionGrantingStrategy::ALL   => ":%MASK_PARAM% = e.mask & :%MASK_PARAM%",
-        PermissionGrantingStrategy::ANY   => "e.mask & :%MASK_PARAM% != 0",
-        PermissionGrantingStrategy::EQUAL => "e.mask = :%MASK_PARAM%",
+        PermissionGrantingStrategy::ALL   => ':%MASK_PARAM% = e.mask & :%MASK_PARAM%',
+        PermissionGrantingStrategy::ANY   => 'e.mask & :%MASK_PARAM% != 0',
+        PermissionGrantingStrategy::EQUAL => 'e.mask = :%MASK_PARAM%',
     ];
 
     /**
@@ -74,7 +74,8 @@ class ReverseSearchAclProvider extends MutableAclProvider
     }
 
     /**
-     * Finds object identities by owner sid and additional filters
+     * Finds allowed object aces (in ObjectIdentity wrap) by owner sid and additional filters
+     * @deprecated use findAllowedEntries instead
      * TODO implement cache (probably default acl cache can be used here)
      *
      * @param SecurityIdentityInterface $sid          owner sid
@@ -92,7 +93,7 @@ class ReverseSearchAclProvider extends MutableAclProvider
     {
         // TODO implement oid search too
         if ($findChildren) {
-            throw new InvalidArgumentException("Object identities children search is not implemented yet");
+            throw new InvalidArgumentException('Object identities children search is not implemented yet');
         }
 
         $valuesForBind = [];
@@ -129,6 +130,124 @@ SELECTCLAUSE;
         }
 
         return $objectIdentities;
+    }
+
+    /**
+     * Provides reverse-search for class-, object-, classfield-, objectfield- ACEs.
+     * TODO implement cache (probably default acl cache can be used here)
+     *
+     * @param SecurityIdentityInterface $sid          owner sid
+     * @param string                    $permission   permission for that object identities should be used ('VIEW', 'EDIT', etc)
+     * @param array                     $aceFilter    ace filter with the following structure:
+     *        array(
+     *            "class"  class name of object identities to restrict the search
+     *            "field"  field name of the class of object identities to restrict the search (class field should be set)
+     *        )
+     * @param bool                      $findChildren flag defines whether children object identities
+     *                                                for found ones should be returned or not
+     *
+     * @return array with the following structure (all top level keys (class_access, class_field_access, oid_access, oid_field_access) are optional):
+     *
+     *               [
+     *                  '\F\Q\C\N' => [
+     *                      'class_access'        => true,
+     *                      'class_field_access'  => ['field1', 'field2', 'field3'],
+     *                      'object_access'       => ['id1', 'id2', 'id3', 'id4'],
+     *                      'object_field_access' => [
+     *                          'id2' => ['field1', 'field2'],
+     *                          'id5' => ['field3']
+     *                      ]
+     *                  ]
+     *               ]
+     */
+    public function findAllowedEntries(SecurityIdentityInterface $sid, $permission, $aceFilter = array(), $findChildren = false)
+    {
+        // TODO implement oid search too
+        if ($findChildren) {
+            throw new InvalidArgumentException("Object identities children search is not implemented yet");
+        }
+
+        $valuesForBind = array();
+
+        // sql restrictions based by parameters specified
+        $sidSqlRestriction        = $this->getSidSqlRestriction($sid, $valuesForBind);
+        $aceSqlRestriction        = $this->getAceSqlRestriction($aceFilter, $valuesForBind);
+        $permissionSqlRestriction = $this->getPermissionSqlRestriction($permission, $valuesForBind);
+
+        $pattern = <<<SELECTCLAUSE
+            SELECT DISTINCT
+                o.object_identifier,
+                c.class_type,
+                e.field_name
+            FROM
+                {$this->options['entry_table_name']} e
+            LEFT JOIN {$this->options['oid_table_name']} o ON o.id = e.object_identity_id
+            %s
+            %s
+            %s
+SELECTCLAUSE;
+        $sql  = sprintf($pattern, $sidSqlRestriction, $aceSqlRestriction, $permissionSqlRestriction);
+        $stmt = $this->connection->prepare($sql);
+
+        // bind values
+        $this->bindValuesToStatement($stmt, $valuesForBind);
+
+        $stmt->execute();
+        $result = $this->hydrateAllowedEntriesResult($stmt);
+
+        return $result;
+    }
+
+    /**
+     * Hydrates fetched result of allowed entries
+     *
+     * @param Statement $stmt statement
+     *
+     * @return array
+     */
+    private function hydrateAllowedEntriesResult(Statement $stmt)
+    {
+        $result = [];
+        foreach ($stmt->fetchAll() as $data) {
+            $classType = $data['class_type'];
+            if (!empty($data['object_identifier'])) {
+                if (!empty($data['field_name'])) {
+                    // object field ace
+                    if (!isset($result[$classType]['object_field_access'])) {
+                        $result[$classType]['object_field_access'] = array();
+                    }
+
+                    if (!isset($result[$classType]['object_field_access'][$data['object_identifier']])) {
+                        $result[$classType]['object_field_access'][$data['object_identifier']] = array();
+                    }
+                    $result[$classType]['object_field_access'][$data['object_identifier']][] = $data['field_name'];
+                } else {
+                    if (!isset($result[$classType]['object_access'])) {
+                        $result[$classType]['object_access'] = array();
+                    }
+                    // object ace
+                    if (!in_array($data['object_identifier'], $result[$classType]['object_access'])) {
+                        $result[$classType]['object_access'][] = $data['object_identifier'];
+                    }
+                }
+            } else {
+                if (!empty($data['field_name'])) {
+                    // class field ace
+                    if (!isset($result[$classType]['class_field_access'])) {
+                        $result[$classType]['class_field_access'] = array();
+                    }
+
+                    if (!in_array($data['field_name'], $result[$classType]['class_field_access'])) {
+                        $result[$classType]['class_field_access'][] = $data['field_name'];
+                    }
+                } else {
+                    // class ace
+                    $result[$classType]['class_access'] = true;
+                }
+            }
+        }
+
+        return $result;
     }
 
     /**
