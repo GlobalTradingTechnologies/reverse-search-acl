@@ -42,11 +42,11 @@ class ReverseSearchAclProvider extends MutableAclProvider
      *
      * @var array
      */
-    protected static $permissionStrategyCheckPatterns = array(
+    protected static $permissionStrategyCheckPatterns = [
         PermissionGrantingStrategy::ALL   => ":%MASK_PARAM% = e.mask & :%MASK_PARAM%",
         PermissionGrantingStrategy::ANY   => "e.mask & :%MASK_PARAM% != 0",
         PermissionGrantingStrategy::EQUAL => "e.mask = :%MASK_PARAM%",
-    );
+    ];
 
     /**
      * Permission map
@@ -80,22 +80,22 @@ class ReverseSearchAclProvider extends MutableAclProvider
      * @param SecurityIdentityInterface $sid          owner sid
      * @param string                    $permission   permission for that object identities should be used ('VIEW', 'EDIT', etc)
      * @param array                     $aceFilter    ace filter with the following structure:
-     *        array(
+     *        [
      *            "class"  class name of object identities to restrict the search
      *            "field"  field name of the class of object identities to restrict the search (class field should be set)
-     *        )
+     *        ]
      * @param bool                      $findChildren flag defines whether children object identities
      *                                                for found ones should be returned or not
      * @return array of object identities grouped by type
      */
-    public function findObjectIdentities(SecurityIdentityInterface $sid, $permission, $aceFilter = array(), $findChildren = false)
+    public function findObjectIdentities(SecurityIdentityInterface $sid, $permission, $aceFilter = [], $findChildren = false)
     {
         // TODO implement oid search too
         if ($findChildren) {
             throw new InvalidArgumentException("Object identities children search is not implemented yet");
         }
 
-        $valuesForBind = array();
+        $valuesForBind = [];
 
         // sql restrictions based by parameters specified
         $sidSqlRestriction        = $this->getSidSqlRestriction($sid, $valuesForBind);
@@ -119,11 +119,11 @@ SELECTCLAUSE;
         // bind values
         $this->bindValuesToStatement($stmt, $valuesForBind);
 
-        $objectIdentities = array();
+        $objectIdentities = [];
         $stmt->execute();
         foreach ($stmt->fetchAll() as $data) {
             if (!isset($objectIdentities[$data['class_type']])) {
-                $objectIdentities[$data['class_type']] = array();
+                $objectIdentities[$data['class_type']] = [];
             }
             $objectIdentities[$data['class_type']][] = new ObjectIdentity($data['object_identifier'], $data['class_type']);
         }
@@ -148,24 +148,24 @@ SELECTCLAUSE;
 
         // Hack to omit mandatory object parameter which is not necessary
         $requiredMasks = $this->permissionMap->getMasks($permission, new \StdClass());
-        $maskSqlParams = array();
+        $maskSqlParams = [];
 
         // filling values for bind with mask params and prepare mask params array
         foreach ($requiredMasks as $maskKey => $mask) {
             $maskParam = "mask" . $maskKey;
             $maskSqlParams[$maskKey] = $maskParam;
-            $valuesForBind[$maskParam] = array('value' => $mask, 'type' => PDO::PARAM_INT);
+            $valuesForBind[$maskParam] = ['value' => $mask, 'type' => PDO::PARAM_INT];
         }
 
-        $strategyMasksSqlRestrictions = array();
+        $strategyMasksSqlRestrictions = [];
         foreach (static::$permissionStrategyCheckPatterns as $strategyKey => $pattern) {
-            $strategyMasksSqlRestrictions[$strategyKey] = array();
+            $strategyMasksSqlRestrictions[$strategyKey] = [];
             foreach ($requiredMasks as $maskKey => $mask) {
                 $strategyMasksSqlRestrictions[$strategyKey][] = str_replace("%MASK_PARAM%", $maskSqlParams[$maskKey], $pattern);
             }
         }
 
-        $strategySqlRestrictions = array();
+        $strategySqlRestrictions = [];
         foreach ($strategyMasksSqlRestrictions as $strategyKey => $restrictions) {
             $strategySqlRestrictions[] = sprintf('(e.granting_strategy = "%s" AND (%s))', $strategyKey, implode(" OR ", $restrictions));
         }
@@ -194,12 +194,12 @@ SELECTCLAUSE;
 
         if (!empty($aceFilter['class'])) {
             $aceSqlRestriction .= " AND c.class_type = :class";
-            $valuesForBind['class'] = array('value' => $aceFilter['class'], 'type' => PDO::PARAM_STR);
+            $valuesForBind['class'] = ['value' => $aceFilter['class'], 'type' => PDO::PARAM_STR];
         }
 
         if (!empty($aceFilter['field'])) {
             $aceSqlRestriction .= " AND e.field_name = :field";
-            $valuesForBind['field'] = array('value' => $aceFilter['field'], 'type' => PDO::PARAM_STR);
+            $valuesForBind['field'] = ['value' => $aceFilter['field'], 'type' => PDO::PARAM_STR];
         }
 
         return $aceSqlRestriction;
@@ -231,8 +231,8 @@ SELECTCLAUSE;
             $this->options['sid_table_name']
         );
 
-        $valuesForBind['identifier'] = array('value' => $identifier, 'type' => PDO::PARAM_STR);
-        $valuesForBind['username']   = array('value' => $isUsername, 'type' => PDO::PARAM_BOOL);
+        $valuesForBind['identifier'] = ['value' => $identifier, 'type' => PDO::PARAM_STR];
+        $valuesForBind['username']   = ['value' => $isUsername, 'type' => PDO::PARAM_BOOL];
 
         return $sidSqlRestriction;
     }
@@ -242,13 +242,13 @@ SELECTCLAUSE;
      *
      * @param Statement $stmt          statement
      * @param array     $valuesForBind values to bind in following structure:
-     *        array(
+     *        [
      *            "key"        name of parameter in statement
-     *             => array(
+     *             => [
      *                "value"  value of the parameter
      *                "type"   type of the parameter (optional)
-     *            )
-     *        )
+     *            ]
+     *        ]
      */
     private function bindValuesToStatement(Statement $stmt, $valuesForBind)
     {
