@@ -43,9 +43,9 @@ class ReverseSearchAclProvider extends MutableAclProvider
      * @var array
      */
     protected static $permissionStrategyCheckPatterns = [
-        PermissionGrantingStrategy::ALL   => ":%MASK_PARAM% = e.mask & :%MASK_PARAM%",
-        PermissionGrantingStrategy::ANY   => "e.mask & :%MASK_PARAM% != 0",
-        PermissionGrantingStrategy::EQUAL => "e.mask = :%MASK_PARAM%",
+        PermissionGrantingStrategy::ALL   => ':%MASK_PARAM% = e.mask & :%MASK_PARAM%',
+        PermissionGrantingStrategy::ANY   => 'e.mask & :%MASK_PARAM% != 0',
+        PermissionGrantingStrategy::EQUAL => 'e.mask = :%MASK_PARAM%',
     ];
 
     /**
@@ -93,7 +93,7 @@ class ReverseSearchAclProvider extends MutableAclProvider
     {
         // TODO implement oid search too
         if ($findChildren) {
-            throw new InvalidArgumentException("Object identities children search is not implemented yet");
+            throw new InvalidArgumentException('Object identities children search is not implemented yet');
         }
 
         $valuesForBind = [];

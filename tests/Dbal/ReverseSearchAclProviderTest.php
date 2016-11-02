@@ -52,10 +52,10 @@ class ReverseSearchAclProviderTest extends \PHPUnit_Framework_TestCase
             self::markTestSkipped('This test requires SQLite support in your environment');
         }
 
-        $this->con = DriverManager::getConnection(array(
+        $this->con = DriverManager::getConnection([
             'driver' => 'pdo_sqlite',
             'memory' => true,
-        ));
+        ]);
 
         // import the schema
         $schema = new Schema($this->getOptions());
@@ -94,7 +94,7 @@ class ReverseSearchAclProviderTest extends \PHPUnit_Framework_TestCase
         $this->aclProvider->updateAcl($acl);
 
         $this->assertEquals(
-            [$oid->getType() => array($oid)],
+            [$oid->getType() => [$oid]],
             $this->aclProvider->findObjectIdentities($this->sid, "VIEW")
         );
         $this->assertEquals(
@@ -113,7 +113,7 @@ class ReverseSearchAclProviderTest extends \PHPUnit_Framework_TestCase
         $this->aclProvider->updateAcl($acl);
 
         $this->assertEquals(
-            [$oid->getType() => array($oid)],
+            [$oid->getType() => [$oid]],
             $this->aclProvider->findObjectIdentities($this->sid, "VIEW")
         );
         $this->assertEquals(
@@ -156,12 +156,12 @@ class ReverseSearchAclProviderTest extends \PHPUnit_Framework_TestCase
         $this->aclProvider->updateAcl($acl);
 
         $this->assertEquals(
-            [$oid2->getType() => array($oid2)],
-            $this->aclProvider->findObjectIdentities($this->sid, "VIEW", array('class' => $oid2->getType()))
+            [$oid2->getType() => [$oid2]],
+            $this->aclProvider->findObjectIdentities($this->sid, "VIEW", ['class' => $oid2->getType()])
         );
         $this->assertEquals(
             [$oid2->getType() => ['oid_access' => [$oid2->getIdentifier()]]],
-            $this->aclProvider->findAllowedEntries($this->sid, "VIEW", array('class' => $oid2->getType()))
+            $this->aclProvider->findAllowedEntries($this->sid, "VIEW", ['class' => $oid2->getType()])
         );
     }
 
@@ -175,7 +175,7 @@ class ReverseSearchAclProviderTest extends \PHPUnit_Framework_TestCase
         $this->aclProvider->updateAcl($acl);
 
         $this->assertEquals(
-            [$oid->getType() => array($oid)],
+            [$oid->getType() => [$oid]],
             $this->aclProvider->findObjectIdentities($this->sid, "VIEW")
         );
         $this->assertEquals(
@@ -212,13 +212,13 @@ class ReverseSearchAclProviderTest extends \PHPUnit_Framework_TestCase
 
     protected function getOptions()
     {
-        return array(
+        return [
             'oid_table_name' => 'acl_object_identities',
             'oid_ancestors_table_name' => 'acl_object_identity_ancestors',
             'class_table_name' => 'acl_classes',
             'sid_table_name' => 'acl_security_identities',
             'entry_table_name' => 'acl_entries',
-        );
+        ];
     }
 
     protected function getStrategy()
