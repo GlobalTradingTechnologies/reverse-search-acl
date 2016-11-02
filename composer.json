@@ -11,7 +11,7 @@
         }
     ],
     "require": {
-        "php": ">=5.4",
+        "php": ">=5.5",
         "symfony/security-acl": "^2.3|^3.0",
         "doctrine/dbal": " ~2.2"
     },
